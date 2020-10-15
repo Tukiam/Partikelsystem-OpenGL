@@ -1,0 +1,150 @@
+unit Unit1;
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+  Classes, SysUtils, FileUtil, OpenGLContext, Forms, Controls, Graphics,
+  Dialogs, GLU, GL;
+
+type
+
+  { TForm1 }
+
+  TForm1 = class(TForm)
+    OnApp: TApplicationProperties;
+    OpenGLControl1: TOpenGLControl;
+    procedure FormCreate(Sender: TObject);
+    procedure OnAppIdle(Sender: TObject; var Done: Boolean);
+    procedure OpenGLControl1Paint(Sender: TObject);
+    procedure OpenGLControl1Resize(Sender: TObject);
+  private
+    { private declarations }
+  public
+    { public declarations }
+  end;
+
+  TParticle = class(TObject)
+    Fx, Fy, Fz, Fxspeed, Fyspeed: Real;
+
+
+  public
+    constructor create(x,y,z: Real);
+    procedure show(x,y,z: Real);
+    procedure move(x,y: Real);
+
+
+
+  end;
+
+var
+  Form1: TForm1;
+  p: Tparticle;
+
+implementation
+
+{$R *.lfm}
+
+{ TParticle }
+
+constructor TParticle.create(x,y,z: Real);
+begin
+  Fx:= x;
+  Fy:= y;
+  Fz:= z;
+  Fxspeed:= 0.05;
+  Fyspeed:= 0.05;
+end;
+
+procedure TParticle.show(x,y,z: Real);
+begin
+  glcolor4f(1,1,1,1);
+  glbegin(gl_points);
+    glvertex3f(x,y,z);
+  glend;
+end;
+procedure TParticle.move(x,y: Real);
+begin
+  x:= x+Fxspeed;
+  y:= y+Fxspeed;
+end;
+
+{ TForm1 }
+
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  Application.AddOnIdlehandler(@OnAppIdle);
+
+
+end;
+
+procedure TForm1.OnAppIdle(Sender: TObject; var Done: Boolean);
+
+begin
+  Done:=False;
+  OpenGLControl1.Invalidate;
+end;
+
+procedure TForm1.OpenGLControl1Paint(Sender: TObject);
+Var Breite,Hoehe: integer;
+
+ begin
+  Breite:= Openglcontrol1.width;
+  hoehe:= openglcontrol1.height;
+
+  //Darstellungsfenster und Tiefenpuffer definieren
+  glviewport(0,0,Breite,Hoehe);
+  glClearColor(0,0,0,0);
+  glClear(GL_COLOR_BUFFER_BIT OR GL_DEPTH_BUFFER_BIT);
+
+  //Norlmalenbezug und Normalenberechnung
+  glenable(gl_normalize);
+
+  //Projektionsmatrix laden
+  glmatrixmode(gl_projection);
+  glloadidentity();
+
+  //Festlegung der Projektion
+  gluperspective(45,(Breite/Hoehe),0.1,100);
+
+  //Transformation der Projektionsmatrix
+
+
+  //Modellmatrix laden
+  glmatrixmode(gl_modelview);
+  glloadidentity();
+
+  //Tiefenpuffer aktivieren
+  glEnable(GL_DEPTH_TEST);
+
+  //Kameraposition festlegen
+  glulookat(0,0,5,0,0,0,0,1,0);
+
+  //Objekttransformation
+
+  //Textur laden
+
+  //Objekt erzeugen
+
+  p.show(p.Fx, p.Fy, p.Fz);
+  p.move(p.Fx, p.Fy);
+
+  //Textur löschen
+
+  //Beeinflussung der Transformation
+
+  // Zeichnen
+  glFlush();
+
+  // Bildschirmausgabe aktualisieren
+  OpenGLControl1.SwapBuffers;
+
+end;
+
+procedure TForm1.OpenGLControl1Resize(Sender: TObject);
+begin
+  IF OpenGLControl1.Height <= 0 THEN Exit;
+end;
+
+end.
+

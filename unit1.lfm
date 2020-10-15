@@ -1,0 +1,26 @@
+object Form1: TForm1
+  Left = 379
+  Height = 476
+  Top = 208
+  Width = 576
+  Caption = 'Koordinaten'
+  ClientHeight = 476
+  ClientWidth = 576
+  OnCreate = FormCreate
+  LCLVersion = '2.0.10.0'
+  object OpenGLControl1: TOpenGLControl
+    Left = 0
+    Height = 476
+    Top = 0
+    Width = 576
+    Align = alClient
+    AutoResizeViewport = True
+    OnPaint = OpenGLControl1Paint
+    OnResize = OpenGLControl1Resize
+  end
+  object OnApp: TApplicationProperties
+    OnIdle = OnAppIdle
+    Left = 56
+    Top = 56
+  end
+end
