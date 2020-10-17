@@ -7,7 +7,7 @@ object Form1: TForm1
   ClientHeight = 476
   ClientWidth = 576
   OnCreate = FormCreate
-  LCLVersion = '2.0.10.0'
+  LCLVersion = '2.0.8.0'
   object OpenGLControl1: TOpenGLControl
     Left = 0
     Height = 476
@@ -20,7 +20,7 @@ object Form1: TForm1
   end
   object OnApp: TApplicationProperties
     OnIdle = OnAppIdle
-    Left = 56
-    Top = 56
+    left = 56
+    top = 56
   end
 end
