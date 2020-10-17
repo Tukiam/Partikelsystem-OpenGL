@@ -24,6 +24,24 @@ type
     { public declarations }
   end;
 
+  { TParticle }
+  TParticle = class
+  private
+    FX: Double;
+    FY: Double;
+    FZ: Double;
+    FSpeed: Real;
+    procedure SetSpeed(speed: Real);
+  public
+    constructor Create(x, y, z: Double; speed: Real = 0.01);
+    property x: Double read FX;
+    property y: Double read FY;
+    property z: Double read FZ;
+    property speed: Real read FSpeed write SetSpeed;
+
+    procedure show();
+    procedure move();
+  end;
 
 
 var
@@ -35,12 +53,42 @@ implementation
 
 {$R *.lfm}
 
+{ TParticle }
+
+constructor TParticle.Create(x, y, z: Double; speed: Real = 0.01);
+begin
+  FX:= x;
+  FY:= y;
+  FZ:= z;
+  FSpeed:= speed;
+end;
+
+procedure TParticle.SetSpeed(speed: Real);
+begin
+  FSpeed:= speed;
+end;
+
+procedure TParticle.show();
+begin
+  glcolor4f(1,1,1,1);
+  glBegin(gl_points);
+    glVertex3f(FX, FY, FZ);
+  glEnd;
+end;
+
+procedure TParticle.move();
+begin
+  FX:= FX + FSpeed;
+  FY:= FY + FSpeed;
+  // FZ:= FZ + FSpeed;
+end;
+
 { TForm1 }
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
   Application.AddOnIdlehandler(@OnAppIdle);
-  p.Create(0,0,0);
+  p:= TParticle.Create(0,0,0);
 end;
 
 procedure TForm1.OnAppIdle(Sender: TObject; var Done: Boolean);
@@ -89,7 +137,7 @@ Var Breite,Hoehe: integer;
   //Textur laden
 
   //Objekt erzeugen
-  p.show(p.getx,p.gety,p.getz);
+  p.show();
   p.move();
 
   //Beeinflussung der Transformation
@@ -99,6 +147,8 @@ Var Breite,Hoehe: integer;
 
   // Bildschirmausgabe aktualisieren
   OpenGLControl1.SwapBuffers;
+
+  Sleep(50);
 
 end;
 
