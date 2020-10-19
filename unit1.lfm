@@ -1,0 +1,322 @@
+object Form_Nebel: TForm_Nebel
+  Tag = 1
+  Left = 250
+  Height = 951
+  Top = 15
+  Width = 1353
+  Caption = 'Fogging und Partikelsysteme'
+  ClientHeight = 951
+  ClientWidth = 1353
+  OnCreate = FormCreate
+  LCLVersion = '2.0.10.0'
+  object OpenGLControl1: TOpenGLControl
+    Left = 0
+    Height = 624
+    Top = 0
+    Width = 1353
+    Align = alTop
+    AutoResizeViewport = True
+    OnPaint = OpenGLControl1Paint
+    OnResize = OpenGLControl1Resize
+  end
+  object TB_x: TTrackBar
+    Left = 608
+    Height = 25
+    Top = 688
+    Width = 100
+    Position = 0
+    TabOrder = 1
+  end
+  object TB_speed: TTrackBar
+    Left = 608
+    Height = 25
+    Top = 760
+    Width = 100
+    Position = 5
+    TabOrder = 2
+  end
+  object RG_size: TRadioGroup
+    Left = 856
+    Height = 105
+    Top = 664
+    Width = 185
+    AutoFill = True
+    Caption = 'Partikelgröße'
+    ChildSizing.LeftRightSpacing = 6
+    ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+    ChildSizing.EnlargeVertical = crsHomogenousChildResize
+    ChildSizing.ShrinkHorizontal = crsScaleChilds
+    ChildSizing.ShrinkVertical = crsScaleChilds
+    ChildSizing.Layout = cclLeftToRightThenTopToBottom
+    ChildSizing.ControlsPerLine = 1
+    ClientHeight = 85
+    ClientWidth = 181
+    ItemIndex = 0
+    Items.Strings = (
+      '3'
+      '5'
+      '10'
+    )
+    TabOrder = 3
+  end
+  object RG_color: TRadioGroup
+    Left = 1104
+    Height = 105
+    Top = 664
+    Width = 185
+    AutoFill = True
+    Caption = 'Partikelfarbe'
+    ChildSizing.LeftRightSpacing = 6
+    ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+    ChildSizing.EnlargeVertical = crsHomogenousChildResize
+    ChildSizing.ShrinkHorizontal = crsScaleChilds
+    ChildSizing.ShrinkVertical = crsScaleChilds
+    ChildSizing.Layout = cclLeftToRightThenTopToBottom
+    ChildSizing.ControlsPerLine = 1
+    ClientHeight = 85
+    ClientWidth = 181
+    ItemIndex = 0
+    Items.Strings = (
+      'Grau'
+      'Weiß'
+      'Blau'
+    )
+    TabOrder = 4
+  end
+  object RG_transp: TRadioGroup
+    Left = 608
+    Height = 105
+    Top = 816
+    Width = 185
+    AutoFill = True
+    Caption = 'Transparenz'
+    ChildSizing.LeftRightSpacing = 6
+    ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+    ChildSizing.EnlargeVertical = crsHomogenousChildResize
+    ChildSizing.ShrinkHorizontal = crsScaleChilds
+    ChildSizing.ShrinkVertical = crsScaleChilds
+    ChildSizing.Layout = cclLeftToRightThenTopToBottom
+    ChildSizing.ControlsPerLine = 1
+    ClientHeight = 85
+    ClientWidth = 181
+    ItemIndex = 0
+    Items.Strings = (
+      '10%'
+      '50%'
+      '80%'
+    )
+    TabOrder = 5
+  end
+  object RG_shape: TRadioGroup
+    Left = 853
+    Height = 105
+    Top = 816
+    Width = 185
+    AutoFill = True
+    Caption = 'Partikelform'
+    ChildSizing.LeftRightSpacing = 6
+    ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+    ChildSizing.EnlargeVertical = crsHomogenousChildResize
+    ChildSizing.ShrinkHorizontal = crsScaleChilds
+    ChildSizing.ShrinkVertical = crsScaleChilds
+    ChildSizing.Layout = cclLeftToRightThenTopToBottom
+    ChildSizing.ControlsPerLine = 1
+    ClientHeight = 85
+    ClientWidth = 181
+    ItemIndex = 0
+    Items.Strings = (
+      'Punkt'
+      'Textur'
+    )
+    TabOrder = 6
+  end
+  object RG_lifespan: TRadioGroup
+    Left = 1096
+    Height = 105
+    Top = 816
+    Width = 185
+    AutoFill = True
+    Caption = 'Lebensdauer'
+    ChildSizing.LeftRightSpacing = 6
+    ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+    ChildSizing.EnlargeVertical = crsHomogenousChildResize
+    ChildSizing.ShrinkHorizontal = crsScaleChilds
+    ChildSizing.ShrinkVertical = crsScaleChilds
+    ChildSizing.Layout = cclLeftToRightThenTopToBottom
+    ChildSizing.ControlsPerLine = 1
+    ClientHeight = 85
+    ClientWidth = 181
+    ItemIndex = 0
+    Items.Strings = (
+      '30 Frames'
+      '50 Frames'
+      '100 Frames'
+    )
+    TabOrder = 7
+  end
+  object L_x: TLabel
+    Left = 608
+    Height = 15
+    Top = 664
+    Width = 55
+    Caption = 'X-Position'
+    ParentColor = False
+  end
+  object L_speed: TLabel
+    Left = 608
+    Height = 15
+    Top = 736
+    Width = 87
+    Caption = 'Geschwindigkeit'
+    ParentColor = False
+  end
+  object TB_y: TTrackBar
+    Left = 736
+    Height = 25
+    Top = 688
+    Width = 100
+    Position = 5
+    TabOrder = 8
+  end
+  object L_y: TLabel
+    Left = 736
+    Height = 15
+    Top = 664
+    Width = 55
+    Caption = 'Y-Position'
+    ParentColor = False
+  end
+  object TB_amount: TTrackBar
+    Left = 736
+    Height = 25
+    Top = 760
+    Width = 100
+    Position = 0
+    TabOrder = 9
+  end
+  object L_amount: TLabel
+    Left = 736
+    Height = 15
+    Top = 736
+    Width = 37
+    Caption = 'Menge'
+    ParentColor = False
+  end
+  object TB_Density: TTrackBar
+    Left = 248
+    Height = 25
+    Top = 688
+    Width = 100
+    Position = 3
+    TabOrder = 10
+  end
+  object L_Density: TLabel
+    Left = 248
+    Height = 15
+    Top = 664
+    Width = 34
+    Caption = 'Dichte'
+    ParentColor = False
+  end
+  object TB_FogStart: TTrackBar
+    Left = 248
+    Height = 25
+    Top = 760
+    Width = 100
+    Position = 10
+    TabOrder = 11
+  end
+  object L_FogStart: TLabel
+    Left = 248
+    Height = 15
+    Top = 736
+    Width = 60
+    Caption = 'Nebel-Start'
+    ParentColor = False
+  end
+  object TB_FogEnd: TTrackBar
+    Left = 248
+    Height = 25
+    Top = 832
+    Width = 100
+    Position = 5
+    TabOrder = 12
+  end
+  object L_FogEnd: TLabel
+    Left = 248
+    Height = 15
+    Top = 808
+    Width = 62
+    Caption = 'Nebel-Ende'
+    ParentColor = False
+  end
+  object TB_FogColor2: TTrackBar
+    Left = 64
+    Height = 25
+    Top = 832
+    Width = 100
+    Position = 5
+    TabOrder = 13
+  end
+  object L_FogColor2: TLabel
+    Left = 64
+    Height = 15
+    Top = 808
+    Width = 55
+    Caption = 'FogColor2'
+    ParentColor = False
+  end
+  object L_FogColor0: TLabel
+    Left = 64
+    Height = 15
+    Top = 664
+    Width = 55
+    Caption = 'FogColor0'
+    ParentColor = False
+  end
+  object TB_FogColor1: TTrackBar
+    Left = 64
+    Height = 25
+    Top = 760
+    Width = 100
+    Position = 5
+    TabOrder = 14
+  end
+  object L_FogColor1: TLabel
+    Left = 64
+    Height = 15
+    Top = 736
+    Width = 55
+    Caption = 'FogColor1'
+    ParentColor = False
+  end
+  object TB_FogColor0: TTrackBar
+    Left = 64
+    Height = 25
+    Top = 688
+    Width = 100
+    Position = 5
+    TabOrder = 15
+  end
+  object TB_FogColor3: TTrackBar
+    Left = 64
+    Height = 25
+    Top = 904
+    Width = 100
+    Position = 10
+    TabOrder = 16
+  end
+  object L_FogColor3: TLabel
+    Left = 64
+    Height = 15
+    Top = 880
+    Width = 55
+    Caption = 'FogColor3'
+    ParentColor = False
+  end
+  object OnApp: TApplicationProperties
+    OnIdle = OnAppIdle
+    Left = 56
+    Top = 56
+  end
+end
