@@ -32,6 +32,7 @@ type
     RG_transp: TRadioGroup;
     RG_shape: TRadioGroup;
     RG_lifespan: TRadioGroup;
+    TB_amount: TTrackBar;
     TB_FogColor2: TTrackBar;
     TB_FogColor0: TTrackBar;
     TB_FogColor3: TTrackBar;
@@ -39,7 +40,6 @@ type
     TB_x: TTrackBar;
     TB_speed: TTrackBar;
     TB_y: TTrackBar;
-    TB_amount: TTrackBar;
     TB_Density: TTrackBar;
     TB_FogStart: TTrackBar;
     TB_FogEnd: TTrackBar;
@@ -65,6 +65,7 @@ type
     FShape: integer;
     FLifespan: integer;
     FAge: integer;
+    FQuadric: PGLuquadric;
 
   public
     constructor Create;
@@ -97,20 +98,19 @@ var
   Quadrics: Array[0..7] of PGLuquadric;
   Q:PGLuquadric;
 
-
   //Partikelsystem
   OriginX: double;
   OriginY: double;
   OriginZ: double = 0;
   SSpeed: Real;
-  Amount: integer;
+  Amount: integer = 500;
   SSize: integer;
   SColor: array[0..2] of Real;
   STransp: Real;
   SShape: integer;
   SLifespan: integer;
 
-  ParticleArray: Array [0..1]of TParticle;
+  ParticleArray: Array of TParticle;
   P: TParticle;
 
 implementation
@@ -122,6 +122,7 @@ implementation
 constructor TParticle.Create();
 begin
  FAge:= random(100);
+ FQuadric:= gluNewQuadric();
 end;
 
 
@@ -131,19 +132,17 @@ var
 begin
   TSize:= FSize/200;
 
-
-
   case FShape of
   0: begin
        glPointSize(FSize);
        glColor4f(FColor[0],FColor[1],FColor[2],FTransp);
        glBegin(gl_Points);
+         glcolor3f(0,0,0);
          glVertex3f(FX, FY, FZ);
        glEnd
      end;
   1: begin
        glBegin(GL_QUADS);
-         //glColor3f(0.0,0.0,1.0);    // Blau   Füllfarbe
          glTexCoord2f(0,1);	         // Texturpunkt für A
          glVertex3f(FX-TSize,FY-TSize,0);     // Quadratpunkt A
          glTexCoord2f(1,1);           // Texturpunkt für B
@@ -154,16 +153,24 @@ begin
          glVertex3f(FX-TSize,FY+TSize,0);     // Quadratpunkt D
          glEnd();
      end;
+  2: begin
+
+       //glu.gluQuadricTexture(FQuadric, true);       //Default: false
+       //glu.gluQuadricDrawStyle(FQuadric, value)     //Default: GLU_FILL
+       //glu.gluQuadricNormals(FQuadric, value)       //Default: GLU_SMOOTH
+       //glu.gluQuadricOrientation(FQuadric, value)   //Default: GLU_OUTSIDE
+       //glu.gluDisk(FQuadric, 0, Fsize/2, 1, 1);
+     end;
   end;
 
 end;
 
 procedure TParticle.Move();
 begin
-  FXSpeed:= random(100);
+
   //FYSpeed:= random(200)-100;
   FX:= FX + FXSpeed/5000;
-  FY:= FY + FYSpeed/500;
+  FY:= FY + FYSpeed/5000;
 end;
 
 procedure TParticle.Reset(RX,RY,RSpeed: Double; RSize: Integer; RColor: Array of Real; RTransp: Real; RShape,RLifespan: integer);
@@ -171,24 +178,23 @@ var AddY,AddX: Integer;
 begin
   if Fage >= Flifespan then
     begin
-      addx:= random(40)-20;
-      addy:= random(40)-20;
-      Fx:= rx + addx/100;
-      Fy:= ry + addy/100;
-      Fyspeed:= rspeed;
-      Fsize:= rsize;
-      Fcolor[0]:= rcolor[0];
-      Fcolor[1]:= rcolor[1];
-      Fcolor[2]:= rcolor[2];
-      Ftransp:= rtransp;
-      Fshape:= rshape;
-      Flifespan:= rlifespan;
-      Fage:= random(rlifespan);
+      AddX:= random(40)-20;
+      AddY:= random(40)-20;
+      FX:= rx + AddX/100;
+      FY:= ry + AddY/100;
+      FYspeed:= RSpeed;
+      FXSpeed:= random(80)+10;
+      FSize:= RSize;
+      FColor:= RColor;
+      FTransp:= RTransp;
+      FShape:= RShape;
+      FLifespan:= RLifespan;
+      FAge:= random(RLifespan);
     end;
 end;
 procedure TParticle.aging();
 begin
-  inc(Fage);
+  inc(FAge);
 end;
 
 { TForm_Nebel }
@@ -199,7 +205,9 @@ var
 begin
   Application.AddOnIdlehandler(@OnAppIdle);
   Randomize;
-  for i:= 0 to 100 do
+
+  setlength(ParticleArray,amount);
+  for i:= 0 to length(ParticleArray) do
     begin
       ParticleArray[i]:= TParticle.create();
     end;
@@ -209,6 +217,7 @@ begin
       q:= gluNewQuadric();
       quadrics[i]:= q;
     end;
+
 end;
 
 procedure TForm_Nebel.OnAppIdle(Sender: TObject; var Done: Boolean);
@@ -234,10 +243,10 @@ Var Breite,Hoehe: integer;
     fogStart: Real;
     FogEnd: Real;
 
-
     //Textur
-    Tex : PSDL_Surface;       // Texturbezeichnung
+    Tex : PSDL_Surface;
     TexID : gluInt;
+
  begin
   //Darstellungsfenster und Tiefenpuffer definieren
   Breite:= Openglcontrol1.width;
@@ -308,9 +317,9 @@ Var Breite,Hoehe: integer;
 
     //Nebel
     fogColor[0]:= TB_fogColor0.position/10;
-    fogColor[1]:= TB_fogColor0.position/10;
-    fogColor[2]:= TB_fogColor0.position/10;
-    fogColor[3]:= TB_fogColor0.position/10;
+    fogColor[1]:= TB_fogColor1.position/10;
+    fogColor[2]:= TB_fogColor2.position/10;
+    fogColor[3]:= TB_fogColor3.position/10;
 
     glEnable(GL_FOG);
 
@@ -335,13 +344,11 @@ Var Breite,Hoehe: integer;
     gluQuadricDrawStyle(Quadric, GLU_FILL);
     gluQuadricNormals(Quadric, GLU_FLAT);
     gluQuadricTexture(Quadric, GL_TRUE);
-
     glShadeModel(GL_FLAT);
 
 
     //Quadrics zeichnen
-    glcolor3f(1,0,0);
-
+    glColor3f(1,0,0);
     i:= 0;
      while i < 7 do
        begin
@@ -353,7 +360,6 @@ Var Breite,Hoehe: integer;
         glpopmatrix();
         inc(i);
        end;
-
 
   glPopMatrix();
 
@@ -370,8 +376,8 @@ Var Breite,Hoehe: integer;
     glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 
     //Textur laden
-    Tex := IMG_Load('textur/Textur2.png');   //Dateipfad
-    IF assigned(Tex) THEN
+    Tex := IMG_Load('textur/Textur4.png');       // groß
+  IF assigned(Tex) THEN
     BEGIN
       // eindeutige Kennung für die Textur generieren
       glGenTextures(1, @TexID);
@@ -389,13 +395,12 @@ Var Breite,Hoehe: integer;
       glTexImage2D(GL_TEXTURE_2D,0,3,Tex^.W,Tex^.H,0,GL_RGB,GL_UNSIGNED_BYTE,Tex^.Pixels);
       // Gibt die Texturkennung frei
       SDL_FreeSurface(Tex);
-    END;
+    end;
 
   // Aktivierung einer zweidimensionalen Textur
   glEnable(GL_TEXTURE_2D);
 
-    // --- Objekt erzeugen
-
+  // --- Objekt erzeugen
     case TB_amount.position of
   0:amount:= 0;
   1:amount:= 10;
@@ -493,9 +498,12 @@ Var Breite,Hoehe: integer;
   2:slifespan:= 1000;
   end;
 
-  for i:= 0 to 100 do
+  //Disable fog
+  glDisable(GL_FOG);
+
+  for i:= 0 to length(ParticleArray) do
     begin
-      ParticleArray[i].reset(Originx,Originy,sspeed,ssize,scolor,stransp,sshape,slifespan);
+      ParticleArray[i].reset(OriginX,OriginY,SSpeed,SSize,SColor,STransp,SShape,SLifespan);
       ParticleArray[i].show;
       ParticleArray[i].move;
       ParticleArray[i].aging;
@@ -506,16 +514,14 @@ Var Breite,Hoehe: integer;
   gluDeleteQuadric(Quadric);
 
   // Textur löschen
-  glDisable(GL_TEXTURE_2D);      //um Objekte zu zeichnen ohne Textur
-  glDeleteTextures(1,@TexID);    // Freigabe der Textur
+  glDisable(GL_TEXTURE_2D);      //Textur deaktivieren
+  glDeleteTextures(1,@TexID);    // Löschen der Textur
 
   // Zeichnen
   glFlush();
 
   // Bildschirmausgabe aktualisieren
   OpenGLControl1.SwapBuffers;
-
-
 
 end;
 

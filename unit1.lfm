@@ -127,6 +127,7 @@ object Form_Nebel: TForm_Nebel
     Items.Strings = (
       'Punkt'
       'Textur'
+      'Quadric-Textur'
     )
     TabOrder = 6
   end
@@ -186,14 +187,6 @@ object Form_Nebel: TForm_Nebel
     Caption = 'Y-Position'
     ParentColor = False
   end
-  object TB_amount: TTrackBar
-    Left = 736
-    Height = 25
-    Top = 760
-    Width = 100
-    Position = 0
-    TabOrder = 9
-  end
   object L_amount: TLabel
     Left = 736
     Height = 15
@@ -208,7 +201,7 @@ object Form_Nebel: TForm_Nebel
     Top = 688
     Width = 100
     Position = 3
-    TabOrder = 10
+    TabOrder = 9
   end
   object L_Density: TLabel
     Left = 248
@@ -224,7 +217,7 @@ object Form_Nebel: TForm_Nebel
     Top = 760
     Width = 100
     Position = 10
-    TabOrder = 11
+    TabOrder = 10
   end
   object L_FogStart: TLabel
     Left = 248
@@ -240,7 +233,7 @@ object Form_Nebel: TForm_Nebel
     Top = 832
     Width = 100
     Position = 5
-    TabOrder = 12
+    TabOrder = 11
   end
   object L_FogEnd: TLabel
     Left = 248
@@ -256,7 +249,7 @@ object Form_Nebel: TForm_Nebel
     Top = 832
     Width = 100
     Position = 5
-    TabOrder = 13
+    TabOrder = 12
   end
   object L_FogColor2: TLabel
     Left = 64
@@ -280,7 +273,7 @@ object Form_Nebel: TForm_Nebel
     Top = 760
     Width = 100
     Position = 5
-    TabOrder = 14
+    TabOrder = 13
   end
   object L_FogColor1: TLabel
     Left = 64
@@ -296,7 +289,7 @@ object Form_Nebel: TForm_Nebel
     Top = 688
     Width = 100
     Position = 5
-    TabOrder = 15
+    TabOrder = 14
   end
   object TB_FogColor3: TTrackBar
     Left = 64
@@ -304,7 +297,7 @@ object Form_Nebel: TForm_Nebel
     Top = 904
     Width = 100
     Position = 10
-    TabOrder = 16
+    TabOrder = 15
   end
   object L_FogColor3: TLabel
     Left = 64
@@ -313,6 +306,14 @@ object Form_Nebel: TForm_Nebel
     Width = 55
     Caption = 'FogColor3'
     ParentColor = False
+  end
+  object TB_amount: TTrackBar
+    Left = 736
+    Height = 25
+    Top = 760
+    Width = 100
+    Position = 0
+    TabOrder = 16
   end
   object OnApp: TApplicationProperties
     OnIdle = OnAppIdle
