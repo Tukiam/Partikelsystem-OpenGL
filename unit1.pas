@@ -23,30 +23,36 @@ type
     L_amount: TLabel;
     L_FogColor1: TLabel;
     L_y: TLabel;
-    L_speed: TLabel;
+    L_Yspeed: TLabel;
     L_x: TLabel;
     OnApp: TApplicationProperties;
     OpenGLControl1: TOpenGLControl;
+    OpenGLControl2: TOpenGLControl;
+    P_V: TPanel;
+    P_H: TPanel;
+    RG_FogMode: TRadioGroup;
     RG_size: TRadioGroup;
     RG_color: TRadioGroup;
     RG_transp: TRadioGroup;
     RG_shape: TRadioGroup;
     RG_lifespan: TRadioGroup;
-    TB_amount: TTrackBar;
+    TB_Emitter: TTrackBar;
     TB_FogColor2: TTrackBar;
     TB_FogColor0: TTrackBar;
     TB_FogColor3: TTrackBar;
     TB_FogColor1: TTrackBar;
     TB_x: TTrackBar;
-    TB_speed: TTrackBar;
+    TB_Yspeed: TTrackBar;
     TB_y: TTrackBar;
     TB_Density: TTrackBar;
     TB_FogStart: TTrackBar;
     TB_FogEnd: TTrackBar;
     procedure FormCreate(Sender: TObject);
     procedure OnAppIdle(Sender: TObject; var Done: Boolean);
+    procedure OpenGLControl1Click(Sender: TObject);
     procedure OpenGLControl1Paint(Sender: TObject);
     procedure OpenGLControl1Resize(Sender: TObject);
+    procedure P_VClick(Sender: TObject);
   private
     { private declarations }
   public
@@ -57,15 +63,14 @@ type
   TParticle = class
   private
     FX,FY,FZ: Double;
-    FXSpeed: Double;
-    FYSpeed: Double;
+    FXSpeed: integer;
+    FYSpeed: integer;
     FSize: integer;
     FColor: Array[0..2] of Real;
     FTransp: Real;
     FShape: integer;
     FLifespan: integer;
     FAge: integer;
-    FQuadric: PGLuquadric;
 
   public
     constructor Create;
@@ -73,8 +78,8 @@ type
     property X: Double read FX;
     property Y: Double read FY;
     property Z: Double read FZ;
-    property XSpeed: Double read FXSpeed;
-    property YSpeed: Double read FYSpeed;
+    property XSpeed: integer read FXSpeed;
+    property YSpeed: integer read FYSpeed;
     property Size: integer write FSize;
     property Color1: Real write FColor[1];
     property Color2: Real write FColor[2];
@@ -86,7 +91,7 @@ type
 
     procedure Show();
     procedure Move();
-    procedure Reset(RX,RY,RSpeed: double; RSize: integer; RColor: Array of Real; RTransp: Real; RShape,RLifespan: integer);
+    procedure Reset(RX,RY: Double;RSpeed: integer; RSize: Integer; RColor: Array of Real; RTransp: Real; RShape,RLifespan,REmitter: integer);
     procedure Aging();
   end;
 
@@ -102,16 +107,24 @@ var
   OriginX: double;
   OriginY: double;
   OriginZ: double = 0;
-  SSpeed: Real;
-  Amount: integer = 500;
+  SSpeed: integer;
+  Amount: integer = 300;
   SSize: integer;
   SColor: array[0..2] of Real;
   STransp: Real;
   SShape: integer;
   SLifespan: integer;
+  SEmitter: integer;
 
   ParticleArray: Array of TParticle;
   P: TParticle;
+
+  //Textur
+  Tex : PSDL_Surface;
+  TexID : gluInt;
+
+  //Kreispartikel
+  PQuadric: PGLuquadric;
 
 implementation
 
@@ -122,7 +135,6 @@ implementation
 constructor TParticle.Create();
 begin
  FAge:= random(100);
- FQuadric:= gluNewQuadric();
 end;
 
 
@@ -134,10 +146,10 @@ begin
 
   case FShape of
   0: begin
+       glDisable(GL_TEXTURE_2D);      //Textur deaktivieren
        glPointSize(FSize);
        glColor4f(FColor[0],FColor[1],FColor[2],FTransp);
        glBegin(gl_Points);
-         glcolor3f(0,0,0);
          glVertex3f(FX, FY, FZ);
        glEnd
      end;
@@ -154,32 +166,31 @@ begin
          glEnd();
      end;
   2: begin
-
-       //glu.gluQuadricTexture(FQuadric, true);       //Default: false
-       //glu.gluQuadricDrawStyle(FQuadric, value)     //Default: GLU_FILL
-       //glu.gluQuadricNormals(FQuadric, value)       //Default: GLU_SMOOTH
-       //glu.gluQuadricOrientation(FQuadric, value)   //Default: GLU_OUTSIDE
-       //glu.gluDisk(FQuadric, 0, Fsize/2, 1, 1);
+       glpushmatrix();
+         gltranslatef(FX,FY,0);
+         glrotatef(90, 0,0,1);
+         glu.gluDisk(PQuadric, 0, FSize/100, 50, 50);
+       glpopmatrix();
      end;
+
   end;
 
 end;
 
 procedure TParticle.Move();
 begin
-
-  //FYSpeed:= random(200)-100;
   FX:= FX + FXSpeed/5000;
-  FY:= FY + FYSpeed/5000;
+  FY:= FY + (random(FYSpeed)-FYSpeed/2)/5000;
 end;
 
-procedure TParticle.Reset(RX,RY,RSpeed: Double; RSize: Integer; RColor: Array of Real; RTransp: Real; RShape,RLifespan: integer);
-var AddY,AddX: Integer;
+procedure TParticle.Reset(RX,RY: Double;RSpeed: integer; RSize: Integer; RColor: Array of Real; RTransp: Real; RShape,RLifespan,REmitter: integer);
+var
+  AddX, AddY: Real;
 begin
+  AddX:= random(REmitter)-REmitter/2;
+  AddY:= random(REmitter)-REmitter/2;
   if Fage >= Flifespan then
     begin
-      AddX:= random(40)-20;
-      AddY:= random(40)-20;
       FX:= rx + AddX/100;
       FY:= ry + AddY/100;
       FYspeed:= RSpeed;
@@ -218,12 +229,23 @@ begin
       quadrics[i]:= q;
     end;
 
+  PQuadric:= gluNewQuadric();
+    gluQuadricOrientation(PQuadric, GLU_OUTSIDE);  //Default: false
+    gluQuadricDrawStyle(PQuadric, GLU_FILL);      //Default: GLU_FILL
+    gluQuadricNormals(PQuadric, GLU_FLAT);     //Default: GLU_SMOOTH
+    gluQuadricTexture(PQuadric, GL_TRUE);      //Default: GLU_OUTSIDE
+
 end;
 
 procedure TForm_Nebel.OnAppIdle(Sender: TObject; var Done: Boolean);
 begin
   Done:=False;
   OpenGLControl1.Invalidate;
+end;
+
+procedure TForm_Nebel.OpenGLControl1Click(Sender: TObject);
+begin
+
 end;
 
 
@@ -243,9 +265,13 @@ Var Breite,Hoehe: integer;
     fogStart: Real;
     FogEnd: Real;
 
-    //Textur
-    Tex : PSDL_Surface;
-    TexID : gluInt;
+CONST
+    Links:Real = -1.0;     // Left
+    Rechts:Real = 1.0;     // Right
+    Unten:Real = -1.0;     // Bottom
+    Oben:Real = 1.0;       // Top
+    Vorne:Real = 0.1;       // Teleeffekt Near        (muss positiv sein)
+    Hinten:Real = 10.0;    // Weitwinkeleffekt Far   (muss positiv sein)
 
  begin
   //Darstellungsfenster und Tiefenpuffer definieren
@@ -263,7 +289,7 @@ Var Breite,Hoehe: integer;
   glloadidentity();
 
   //Blending aktivieren
-  glEnable(gl_Blend);
+  glEnable(GL_BLEND);
 
   // Einteilung des Viewports (Darstellung der Linien)
   glBegin(GL_LINES);
@@ -277,6 +303,7 @@ Var Breite,Hoehe: integer;
 
   //Festlegung der Projektion
   gluperspective(45,(Breite/Hoehe),0.1,100);
+
 
   //Transformation der Projektionsmatrix
 
@@ -319,22 +346,31 @@ Var Breite,Hoehe: integer;
     fogColor[0]:= TB_fogColor0.position/10;
     fogColor[1]:= TB_fogColor1.position/10;
     fogColor[2]:= TB_fogColor2.position/10;
-    fogColor[3]:= TB_fogColor3.position/10;
+    fogColor[3]:= TB_fogColor3.position/5;
+
+    //Hintergrund in Farbe des Nebels
+    glClearColor(fogColor[0],fogColor[1],fogColor[2],fogColor[3]);
+    glClear(GL_COLOR_BUFFER_BIT OR GL_DEPTH_BUFFER_BIT);
 
     glEnable(GL_FOG);
 
     fogDensity:= TB_Density.position/10;
-    fogStart:= TB_FogStart.position/10;
+    fogStart:= (TB_FogStart.position-10);
     fogEnd:= TB_FogEnd.position;
 
-    fogMode:= GL_EXP;
+    case RG_FogMode.itemindex of
+    0:fogMode:= GL_EXP;
+    1:fogMode:= GL_EXP2;
+    2:fogMode:= GL_LINEAR;
+    end;
+
         glFogi (GL_FOG_MODE, fogMode);
         glFogfv (GL_FOG_COLOR, fogColor);
         glFogf (GL_FOG_DENSITY, fogDensity);
         glHint (GL_FOG_HINT, GL_DONT_CARE);
         glFogf (GL_FOG_START, fogStart);
         glFogf (GL_FOG_END, fogEnd);
-    glClearColor(0.5, 0.5, 0.5, 1.0);
+    glClearColor(fogColor[0], fogColor[1], fogColor[2], fogColor[3]);
 
     //Quardic erstellen
     Quadric := gluNewQuadric();
@@ -349,22 +385,30 @@ Var Breite,Hoehe: integer;
 
     //Quadrics zeichnen
     glColor3f(1,0,0);
-    i:= 0;
-     while i < 7 do
+     for i:= 0 to 7 do
        begin
         glpushmatrix();
-        gltranslatef(0.4+i*-0.3,0,0.5+i*-0.7);
+        gltranslatef(0.4+i*-0.3,0.1,0.5+i*-0.7);
         glrotatef(90, 1,0,0);
         glrotatef(30, 0,0,1);
         glu.gluCylinder(quadrics[i], 0.1, 0.1, 0.2, 4, 50);
         glpopmatrix();
-        inc(i);
        end;
 
   glPopMatrix();
+  glDisable(GL_FOG);
 
   // Viewport rechts: Partikelsystem
   glViewport(Breite DIV 2,0,Breite,Hoehe);
+
+  // Hintergrund schwarz
+  glbegin(GL_Quads);
+    glcolor3f(0,0,0);
+    glvertex3f(-20,-20,-20);
+    glvertex3f(20,-20,-20);
+    glvertex3f(20,20,-20);
+    glvertex3f(-20,20,-20);
+  glend;
 
   glPushMatrix();
     glLoadIdentity();
@@ -375,84 +419,92 @@ Var Breite,Hoehe: integer;
     // --- Polygonmodus einstellen
     glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 
+    // Licht
+    glDisable(GL_COLOR_MATERIAL);
+    glDisable(GL_LIGHT0);
+    glDisable(GL_LIGHTING);
+
     //Textur laden
-    Tex := IMG_Load('textur/Textur4.png');       // groß
-  IF assigned(Tex) THEN
-    BEGIN
-      // eindeutige Kennung für die Textur generieren
-      glGenTextures(1, @TexID);
-      // Textur einbinden (Rendern der Textur)
-      glBindTexture( GL_TEXTURE_2D, TexID);
-      // Definition, wie die Textur beim Mipmapping gefiltert werden soll
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      // Texturfarben sollen ursprüngliche Farben ersetzen
-      glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE); // GL_MODULATE (kein Ersetzen)
-      // Art der Abbildung der Textur
-      // generiert aus einer Textur alle Mipmap-Stufen
-      // gluBuild2DMipmaps(GL_TEXTURE_2D,GL_RGB,Tex^.W,Tex^.H,GL_RGB,GL_UNSIGNED_BYTE,PByte(Tex^.Pixels));
-      // spezifiziert ein zweidimensionales Texturbild
-      glTexImage2D(GL_TEXTURE_2D,0,3,Tex^.W,Tex^.H,0,GL_RGB,GL_UNSIGNED_BYTE,Tex^.Pixels);
-      // Gibt die Texturkennung frei
-      SDL_FreeSurface(Tex);
-    end;
+    Tex:= IMG_Load('textur/Textur6.png');
+
+    IF assigned(Tex) THEN
+      BEGIN
+        // eindeutige Kennung für die Textur generieren
+        glGenTextures(1, @TexID);
+        // Textur einbinden (Rendern der Textur)
+        glBindTexture( GL_TEXTURE_2D, TexID);
+        // Definition, wie die Textur beim Mipmapping gefiltert werden soll
+        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        // Texturfarben sollen ursprüngliche Farben ersetzen
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE); // kein Ersetzen der Farben  (sonst GL_REPLACE)
+        // Art der Abbildung der Textur
+        // generiert aus einer Textur alle Mipmap-Stufen
+        // gluBuild2DMipmaps(GL_TEXTURE_2D,GL_RGB,Tex^.W,Tex^.H,GL_RGB,GL_UNSIGNED_BYTE,PByte(Tex^.Pixels));
+        // spezifiziert ein zweidimensionales Texturbild
+        glTexImage2D(GL_TEXTURE_2D,0,3,Tex^.W,Tex^.H,0,GL_RGB,GL_UNSIGNED_BYTE,Tex^.Pixels);
+        // Gibt die Texturkennung frei
+        SDL_FreeSurface(Tex);
+      END;
+
 
   // Aktivierung einer zweidimensionalen Textur
   glEnable(GL_TEXTURE_2D);
 
-  // --- Objekt erzeugen
-    case TB_amount.position of
-  0:amount:= 0;
-  1:amount:= 10;
-  2:amount:= 20;
-  3:amount:= 30;
-  4:amount:= 40;
-  5:amount:= 50;
-  6:amount:= 60;
-  7:amount:= 70;
-  8:amount:= 90;
-  9:amount:= 90;
-  10:amount:= 100;
+  //Objekt erzeugen
+
+    case TB_Emitter.position of
+  0:SEmitter:= 0;
+  1:SEmitter:= 10;
+  2:SEmitter:= 20;
+  3:SEmitter:= 30;
+  4:SEmitter:= 40;
+  5:SEmitter:= 50;
+  6:SEmitter:= 60;
+  7:SEmitter:= 70;
+  8:SEmitter:= 90;
+  9:SEmitter:= 90;
+  10:SEmitter:= 100;
   end;
 
   case TB_x.position of
   0:Originx:= -1;
-  1:Originx:= -0.8;
-  2:Originx:= -0.6;
-  3:Originx:= -0.4;
-  4:Originx:= -0.2;
-  5:Originx:= 0;
-  6:Originx:= 0.2;
-  7:Originx:= 0.4;
-  8:Originx:= 0.6;
-  9:Originx:= 0.8;
-  10:Originx:= 1;
+  1:Originx:= -0.9;
+  2:Originx:= -0.8;
+  3:Originx:= -0.7;
+  4:Originx:= -0.6;
+  5:Originx:= -0.5;
+  6:Originx:= -0.4;
+  7:Originx:= -0.3;
+  8:Originx:= -0.2;
+  9:Originx:= -0.1;
+  10:Originx:= 0;
   end;
   case TB_y.position of
-  0:Originy:= -1;
-  1:Originy:= -0.8;
-  2:Originy:= -0.6;
-  3:Originy:= -0.4;
-  4:Originy:= -0.2;
+  0:Originy:= -0.4;
+  1:Originy:= -0.3;
+  2:Originy:= -0.2;
+  3:Originy:= -0.1;
+  4:Originy:= -0.05;
   5:Originy:= 0;
-  6:Originy:= 0.2;
-  7:Originy:= 0.4;
-  8:Originy:= 0.6;
-  9:Originy:= 0.8;
-  10:Originy:= 1;
+  6:Originy:= 0.05;
+  7:Originy:= 0.1;
+  8:Originy:= 0.2;
+  9:Originy:= 0.3;
+  10:Originy:= 0.4;
   end;
-  case TB_speed.position of
-  0:sspeed:= -100;
-  1:sspeed:= -80;
-  2:sspeed:= -60;
-  3:sspeed:= -40;
-  4:sspeed:= -20;
-  5:sspeed:= 0;
-  6:sspeed:= 20;
-  7:sspeed:= 40;
-  8:sspeed:= 60;
-  9:sspeed:= 80;
-  10:sspeed:= 100;
+  case TB_Yspeed.position of
+  0:SSpeed:= 0;
+  1:SSpeed:= 5;
+  2:SSpeed:= 10;
+  3:SSpeed:= 15;
+  4:SSpeed:= 20;
+  5:SSpeed:= 25;
+  6:SSpeed:= 30;
+  7:SSpeed:= 35;
+  8:SSpeed:= 40;
+  9:SSpeed:= 45;
+  10:SSpeed:= 50;
   end;
 
   case RG_size.itemindex of
@@ -463,47 +515,44 @@ Var Breite,Hoehe: integer;
 
   case RG_color.itemindex of
   0:begin
-    scolor[0]:= 0.5;
-    scolor[1]:= 0.5;
-    scolor[2]:= 0.5;
+    SColor[0]:= 0.5;
+    SColor[1]:= 0.5;
+    SColor[2]:= 0.5;
     end;
 
   1:begin
-    scolor[0]:= 1;
-    scolor[1]:= 1;
-    scolor[2]:= 1;
+    SColor[0]:= 1;
+    SColor[1]:= 1;
+    SColor[2]:= 1;
     end;
 
   2:begin
-    scolor[0]:= 0;
-    scolor[1]:= 0;
-    scolor[2]:= 1;
+    SColor[0]:= 0;
+    SColor[1]:= 0;
+    SColor[2]:= 1;
     end;
   end;
 
   case RG_transp.itemindex of
-  0:stransp:= 0.1;
-  1:stransp:= 0.5;
-  2:stransp:= 0.8;
+  0:STransp:= 0.1;
+  1:STransp:= 0.5;
+  2:STransp:= 0.8;
   end;
 
   case RG_shape.itemindex of
-  0:sshape:= 0;
-  1:sshape:= 1;
+  0:SShape:= 0;
+  1:SShape:= 1;
+  2:SShape:= 2;
   end;
 
   case RG_lifespan.itemindex of
-  0:slifespan:= 30;
-  1:slifespan:= 500;
-  2:slifespan:= 1000;
+  0:SLifespan:= 30;
+  1:SLifespan:= 500;
   end;
-
-  //Disable fog
-  glDisable(GL_FOG);
 
   for i:= 0 to length(ParticleArray) do
     begin
-      ParticleArray[i].reset(OriginX,OriginY,SSpeed,SSize,SColor,STransp,SShape,SLifespan);
+      ParticleArray[i].reset(OriginX,OriginY,SSpeed,SSize,SColor,STransp,SShape,SLifespan,SEmitter);
       ParticleArray[i].show;
       ParticleArray[i].move;
       ParticleArray[i].aging;
@@ -517,6 +566,7 @@ Var Breite,Hoehe: integer;
   glDisable(GL_TEXTURE_2D);      //Textur deaktivieren
   glDeleteTextures(1,@TexID);    // Löschen der Textur
 
+
   // Zeichnen
   glFlush();
 
@@ -528,6 +578,11 @@ end;
 procedure TForm_Nebel.OpenGLControl1Resize(Sender: TObject);
 begin
   IF OpenGLControl1.Height <= 0 THEN Exit;
+end;
+
+procedure TForm_Nebel.P_VClick(Sender: TObject);
+begin
+
 end;
 
 end.
