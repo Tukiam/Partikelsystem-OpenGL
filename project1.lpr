@@ -17,7 +17,7 @@ uses
 begin
   RequireDerivedFormResource:=True;
   Application.Initialize;
-  Application.CreateForm(TForm_Nebel, Form_Nebel);
+  Application.CreateForm(TF_Nebel, F_Nebel);
   Application.Run;
 end.
 
