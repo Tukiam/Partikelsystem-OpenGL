@@ -1,4 +1,4 @@
-object Form_Nebel: TForm_Nebel
+object F_Nebel: TF_Nebel
   Tag = 1
   Left = 364
   Height = 916
@@ -16,11 +16,10 @@ object Form_Nebel: TForm_Nebel
     Width = 1500
     Align = alTop
     AutoResizeViewport = True
-    OnClick = OpenGLControl1Click
     OnPaint = OpenGLControl1Paint
     OnResize = OpenGLControl1Resize
   end
-  object TB_x: TTrackBar
+  object TB_EmitterX: TTrackBar
     Left = 768
     Height = 25
     Top = 688
@@ -36,7 +35,7 @@ object Form_Nebel: TForm_Nebel
     Position = 2
     TabOrder = 2
   end
-  object RG_size: TRadioGroup
+  object RG_Size: TRadioGroup
     Left = 1016
     Height = 105
     Top = 664
@@ -60,7 +59,7 @@ object Form_Nebel: TForm_Nebel
     )
     TabOrder = 3
   end
-  object RG_color: TRadioGroup
+  object RG_Color: TRadioGroup
     Left = 1264
     Height = 105
     Top = 664
@@ -84,7 +83,7 @@ object Form_Nebel: TForm_Nebel
     )
     TabOrder = 4
   end
-  object RG_transp: TRadioGroup
+  object RG_Transp: TRadioGroup
     Left = 768
     Height = 105
     Top = 800
@@ -108,7 +107,7 @@ object Form_Nebel: TForm_Nebel
     )
     TabOrder = 5
   end
-  object RG_shape: TRadioGroup
+  object RG_Shape: TRadioGroup
     Left = 1016
     Height = 105
     Top = 800
@@ -132,7 +131,7 @@ object Form_Nebel: TForm_Nebel
     )
     TabOrder = 6
   end
-  object RG_lifespan: TRadioGroup
+  object RG_Lifespan: TRadioGroup
     Left = 1264
     Height = 105
     Top = 800
@@ -156,7 +155,7 @@ object Form_Nebel: TForm_Nebel
     )
     TabOrder = 7
   end
-  object L_x: TLabel
+  object L_EmitterX: TLabel
     Left = 768
     Height = 15
     Top = 664
@@ -172,7 +171,7 @@ object Form_Nebel: TForm_Nebel
     Caption = 'y-Geschwindigkeit'
     ParentColor = False
   end
-  object TB_y: TTrackBar
+  object TB_EmitterY: TTrackBar
     Left = 896
     Height = 25
     Top = 688
@@ -180,7 +179,7 @@ object Form_Nebel: TForm_Nebel
     Position = 5
     TabOrder = 8
   end
-  object L_y: TLabel
+  object L_EmitterY: TLabel
     Left = 896
     Height = 15
     Top = 664
@@ -188,7 +187,7 @@ object Form_Nebel: TForm_Nebel
     Caption = 'EmitterY'
     ParentColor = False
   end
-  object L_amount: TLabel
+  object L_Emitter: TLabel
     Left = 896
     Height = 15
     Top = 736
@@ -208,8 +207,8 @@ object Form_Nebel: TForm_Nebel
     Left = 408
     Height = 15
     Top = 664
-    Width = 34
-    Caption = 'Dichte'
+    Width = 64
+    Caption = 'Nebeldichte'
     ParentColor = False
   end
   object TB_FogStart: TTrackBar
@@ -224,8 +223,8 @@ object Form_Nebel: TForm_Nebel
     Left = 408
     Height = 15
     Top = 736
-    Width = 60
-    Caption = 'Nebel-Start'
+    Width = 54
+    Caption = 'Nebelstart'
     ParentColor = False
   end
   object TB_FogEnd: TTrackBar
@@ -240,8 +239,8 @@ object Form_Nebel: TForm_Nebel
     Left = 408
     Height = 15
     Top = 808
-    Width = 62
-    Caption = 'Nebel-Ende'
+    Width = 57
+    Caption = 'Nebelende'
     ParentColor = False
   end
   object TB_FogColor2: TTrackBar
@@ -340,18 +339,18 @@ object Form_Nebel: TForm_Nebel
     )
     TabOrder = 17
   end
-  object P_V: TPanel
+  object P_Vertical: TPanel
     Left = 748
     Height = 265
     Top = 640
     Width = 4
-    Caption = 'P_V'
+    Caption = 'P_Vertical'
     Color = clGray
     ParentColor = False
     TabOrder = 18
-    OnClick = P_VClick
+    OnClick = P_VerticalClick
   end
-  object P_H: TPanel
+  object P_Horizontal: TPanel
     Left = 64
     Height = 4
     Top = 640

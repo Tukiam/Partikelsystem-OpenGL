@@ -11,48 +11,47 @@ uses
 
 type
 
-  { TForm_Nebel }
+  { TF_Nebel }
 
-  TForm_Nebel = class(TForm)
+  TF_Nebel = class(TForm)
     L_Density: TLabel;
     L_FogColor0: TLabel;
     L_FogColor2: TLabel;
     L_FogColor3: TLabel;
     L_FogStart: TLabel;
     L_FogEnd: TLabel;
-    L_amount: TLabel;
+    L_Emitter: TLabel;
     L_FogColor1: TLabel;
-    L_y: TLabel;
+    L_EmitterY: TLabel;
     L_Yspeed: TLabel;
-    L_x: TLabel;
+    L_EmitterX: TLabel;
     OnApp: TApplicationProperties;
     OpenGLControl1: TOpenGLControl;
     OpenGLControl2: TOpenGLControl;
-    P_V: TPanel;
-    P_H: TPanel;
+    P_Vertical: TPanel;
+    P_Horizontal: TPanel;
     RG_FogMode: TRadioGroup;
-    RG_size: TRadioGroup;
-    RG_color: TRadioGroup;
-    RG_transp: TRadioGroup;
-    RG_shape: TRadioGroup;
-    RG_lifespan: TRadioGroup;
+    RG_Size: TRadioGroup;
+    RG_Color: TRadioGroup;
+    RG_Transp: TRadioGroup;
+    RG_Shape: TRadioGroup;
+    RG_Lifespan: TRadioGroup;
     TB_Emitter: TTrackBar;
     TB_FogColor2: TTrackBar;
     TB_FogColor0: TTrackBar;
     TB_FogColor3: TTrackBar;
     TB_FogColor1: TTrackBar;
-    TB_x: TTrackBar;
+    TB_EmitterX: TTrackBar;
     TB_Yspeed: TTrackBar;
-    TB_y: TTrackBar;
+    TB_EmitterY: TTrackBar;
     TB_Density: TTrackBar;
     TB_FogStart: TTrackBar;
     TB_FogEnd: TTrackBar;
     procedure FormCreate(Sender: TObject);
     procedure OnAppIdle(Sender: TObject; var Done: Boolean);
-    procedure OpenGLControl1Click(Sender: TObject);
     procedure OpenGLControl1Paint(Sender: TObject);
     procedure OpenGLControl1Resize(Sender: TObject);
-    procedure P_VClick(Sender: TObject);
+    procedure P_VerticalClick(Sender: TObject);
   private
     { private declarations }
   public
@@ -63,8 +62,8 @@ type
   TParticle = class
   private
     FX,FY,FZ: Double;
-    FXSpeed: integer;
-    FYSpeed: integer;
+    FXSpeed: Real;
+    FYSpeed: Real;
     FSize: integer;
     FColor: Array[0..2] of Real;
     FTransp: Real;
@@ -75,35 +74,21 @@ type
   public
     constructor Create;
 
-    property X: Double read FX;
-    property Y: Double read FY;
-    property Z: Double read FZ;
-    property XSpeed: integer read FXSpeed;
-    property YSpeed: integer read FYSpeed;
-    property Size: integer write FSize;
-    property Color1: Real write FColor[1];
-    property Color2: Real write FColor[2];
-    property Color3: Real write FColor[3];
-    property Transp: Real write FTransp;
-    property Shape: integer write FShape;
-    property Lifespan: integer write FLifespan;
-    property Age: integer read Fage write FAge;
-
     procedure Show();
     procedure Move();
-    procedure Reset(RX,RY: Double;RSpeed: integer; RSize: Integer; RColor: Array of Real; RTransp: Real; RShape,RLifespan,REmitter: integer);
+    procedure Reset();
     procedure Aging();
   end;
 
 var
-  //TFrom1
-  Form_Nebel: TForm_Nebel;
+  //Formular
+  F_Nebel: TF_Nebel;
 
   //Fogging
   Quadrics: Array[0..7] of PGLuquadric;
-  Q:PGLuquadric;
 
   //Partikelsystem
+    //Eigenschaften
   OriginX: double;
   OriginY: double;
   OriginZ: double = 0;
@@ -116,14 +101,14 @@ var
   SLifespan: integer;
   SEmitter: integer;
 
+    //PartikelArray
   ParticleArray: Array of TParticle;
-  P: TParticle;
 
-  //Textur
+    //Textur
   Tex : PSDL_Surface;
   TexID : gluInt;
 
-  //Kreispartikel
+    //Kreispartikel
   PQuadric: PGLuquadric;
 
 implementation
@@ -134,144 +119,125 @@ implementation
 
 constructor TParticle.Create();
 begin
- FAge:= random(100);
+ FAge:= random(100); //zufälliges Alter
 end;
 
-
-procedure TParticle.Show();
+procedure TParticle.Show();               //Prozedur für das Anzeigen der Partikel
 var
-  TSize:Double;
+  QSize:Double;
+  CSize:Double;
 begin
-  TSize:= FSize/200;
+  QSize:= FSize/200;                      //Partikelgröße für Quadrate anpassen
+  CSize:= FSize/100;                      //Partikelgröße für Kreispartikel anpassen
 
   case FShape of
   0: begin
-       glDisable(GL_TEXTURE_2D);      //Textur deaktivieren
-       glPointSize(FSize);
-       glColor4f(FColor[0],FColor[1],FColor[2],FTransp);
+       glDisable(GL_TEXTURE_2D);          //Textur deaktivieren
+       glPointSize(FSize);                                 //Punktgröße
+       glColor4f(FColor[0],FColor[1],FColor[2],FTransp);   //Punktfarbe
        glBegin(gl_Points);
-         glVertex3f(FX, FY, FZ);
+         glVertex3f(FX, FY, FZ);          //Punkt zeichnen
        glEnd
      end;
   1: begin
        glBegin(GL_QUADS);
-         glTexCoord2f(0,1);	         // Texturpunkt für A
-         glVertex3f(FX-TSize,FY-TSize,0);     // Quadratpunkt A
-         glTexCoord2f(1,1);           // Texturpunkt für B
-         glVertex3f(FX+TSize,FY-TSize,0);     // Quadratpunkt B
-         glTexCoord2f(1,0);           // Texturpunkt für C
-         glVertex3f(FX+TSize,FY+TSize,0);     // Quadratpunkt C
-         glTexCoord2f(0,0);           // Texturpunkt für D
-         glVertex3f(FX-TSize,FY+TSize,0);     // Quadratpunkt D
+         glTexCoord2f(0,1);	           // Texturpunkt für A
+         glVertex3f(FX-QSize,FY-QSize,0);  // Quadratpunkt A - links unten
+         glTexCoord2f(1,1);                // Texturpunkt für B
+         glVertex3f(FX+QSize,FY-QSize,0);  // Quadratpunkt B - rechts unten
+         glTexCoord2f(1,0);                // Texturpunkt für C
+         glVertex3f(FX+QSize,FY+QSize,0);  // Quadratpunkt C - rechts oben
+         glTexCoord2f(0,0);                // Texturpunkt für D
+         glVertex3f(FX-QSize,FY+QSize,0);  // Quadratpunkt D - links oben
          glEnd();
      end;
   2: begin
-       glpushmatrix();
-         gltranslatef(FX,FY,0);
-         glrotatef(90, 0,0,1);
-         glu.gluDisk(PQuadric, 0, FSize/100, 50, 50);
-       glpopmatrix();
+       gluQuadricOrientation(PQuadric, GLU_OUTSIDE);  //Default: false
+       gluQuadricDrawStyle(PQuadric, GLU_FILL);      //Default: GLU_FILL
+       gluQuadricNormals(PQuadric, GLU_FLAT);     //Default: GLU_SMOOTH
+       gluQuadricTexture(PQuadric, GL_TRUE);      //Default: GLU_OUTSIDE
+       glpushmatrix();                     //neue Matrix auf den Stapel
+         gltranslatef(FX,FY,0);            //Objekttransformation
+         glrotatef(90, 0,0,1);             //Objektrotation
+         glu.gluDisk(PQuadric, 0, CSize, 50, 50);  //Objekt zeichnen
+       glpopmatrix();                      //Matrix vom Stapel nehmen
      end;
-
   end;
-
 end;
 
-procedure TParticle.Move();
+procedure TParticle.Move();                //Prozedur für die Bewegung der Partikel
 begin
-  FX:= FX + FXSpeed/5000;
-  FY:= FY + (random(FYSpeed)-FYSpeed/2)/5000;
+  FX:= FX + FXSpeed/5000;                  //Skalierung der Geschwindigkeit
+  FY:= FY + FYSpeed/5000;
 end;
 
-procedure TParticle.Reset(RX,RY: Double;RSpeed: integer; RSize: Integer; RColor: Array of Real; RTransp: Real; RShape,RLifespan,REmitter: integer);
-var
+procedure TParticle.Reset();               //Prozedur für das Zurücksetzen der Partikel
+var                                        //nach Ablauf der Lebensdauer
   AddX, AddY: Real;
 begin
-  AddX:= random(REmitter)-REmitter/2;
-  AddY:= random(REmitter)-REmitter/2;
-  if Fage >= Flifespan then
+  AddX:= random(SEmitter)-SEmitter/2;      //Variable für Emitterstreuung
+  AddY:= random(SEmitter)-SEmitter/2;      //Variable für Emitterstreuung
+  if Fage >= Flifespan then                //Ende der Lebensdauer des Partikels
     begin
-      FX:= rx + AddX/100;
-      FY:= ry + AddY/100;
-      FYspeed:= RSpeed;
+      FX:= OriginX + AddX/100;             //Setzen der Position
+      FY:= OriginY + AddY/100;
+      FYspeed:= random(SSpeed)-SSpeed/2;   //Setzen der Geschwindigkeit
       FXSpeed:= random(80)+10;
-      FSize:= RSize;
-      FColor:= RColor;
-      FTransp:= RTransp;
-      FShape:= RShape;
-      FLifespan:= RLifespan;
-      FAge:= random(RLifespan);
+      FSize:= SSize;                       //Partikeleigenschaften aus Komponenten entnehmen
+      FColor:= SColor;
+      FTransp:= STransp;
+      FShape:= SShape;
+      FLifespan:= SLifespan;
+      FAge:= random(SLifespan);
     end;
 end;
-procedure TParticle.aging();
+procedure TParticle.aging();               //Prozedur für das Altern der Partikel
 begin
-  inc(FAge);
+  inc(FAge);                               //Alter erhöhen
 end;
 
-{ TForm_Nebel }
+{ TF_Nebel }
 
-procedure TForm_Nebel.FormCreate(Sender: TObject);
+procedure TF_Nebel.FormCreate(Sender: TObject);
 var
-  i: integer;
+  i: integer;                              //Zählvariable
 begin
   Application.AddOnIdlehandler(@OnAppIdle);
   Randomize;
 
-  setlength(ParticleArray,amount);
-  for i:= 0 to length(ParticleArray) do
+  SetLength(ParticleArray,amount);         //Länge des Partikelarrays setzen
+  for i:= 0 to length(ParticleArray) do    //Schleife durch das Partikelarray
     begin
-      ParticleArray[i]:= TParticle.create();
+      ParticleArray[i]:= TParticle.create();  //Partikelarray mit Partikeln füllen
     end;
 
   for i:= 0 to 7 do
     begin
-      q:= gluNewQuadric();
-      quadrics[i]:= q;
+      Quadrics[i]:= gluNewQuadric();;      //Quadrics für Fogging erstellen
     end;
 
-  PQuadric:= gluNewQuadric();
-    gluQuadricOrientation(PQuadric, GLU_OUTSIDE);  //Default: false
-    gluQuadricDrawStyle(PQuadric, GLU_FILL);      //Default: GLU_FILL
-    gluQuadricNormals(PQuadric, GLU_FLAT);     //Default: GLU_SMOOTH
-    gluQuadricTexture(PQuadric, GL_TRUE);      //Default: GLU_OUTSIDE
-
+  PQuadric:= gluNewQuadric();              //Kreispartikel erstellen
 end;
 
-procedure TForm_Nebel.OnAppIdle(Sender: TObject; var Done: Boolean);
+procedure TF_Nebel.OnAppIdle(Sender: TObject; var Done: Boolean);
 begin
   Done:=False;
   OpenGLControl1.Invalidate;
 end;
 
-procedure TForm_Nebel.OpenGLControl1Click(Sender: TObject);
-begin
-
-end;
-
-
-procedure TForm_Nebel.OpenGLControl1Paint(Sender: TObject);
+procedure TF_Nebel.OpenGLControl1Paint(Sender: TObject);
 Var Breite,Hoehe: integer;
-    i: integer; //Zählvariable
+    i: integer;                            //Zählvariable
 
-    //Quader für Fogging
-    Quadric : PGLuquadric;
-
+    //Array für Lichtposition
     Lichtposition : Array[0..3] of glFloat;
 
-    //Nebel
+    //Nebeleigenschaften
     fogColor: Array[0..3] of glFloat;
     fogMode: glint;
     fogDensity: Real;
     fogStart: Real;
     FogEnd: Real;
-
-CONST
-    Links:Real = -1.0;     // Left
-    Rechts:Real = 1.0;     // Right
-    Unten:Real = -1.0;     // Bottom
-    Oben:Real = 1.0;       // Top
-    Vorne:Real = 0.1;       // Teleeffekt Near        (muss positiv sein)
-    Hinten:Real = 10.0;    // Weitwinkeleffekt Far   (muss positiv sein)
 
  begin
   //Darstellungsfenster und Tiefenpuffer definieren
@@ -294,33 +260,28 @@ CONST
   // Einteilung des Viewports (Darstellung der Linien)
   glBegin(GL_LINES);
     // Farbe der Linie
-    glColor4f(1,1,1,0); // weiß
+    glColor4f(1,1,1,0);                    // weiß
     // Vertikale Linie
     glVertex2f(0,-1);
     glVertex2f(0,1);
   glEnd;
 
-
   //Festlegung der Projektion
   gluperspective(45,(Breite/Hoehe),0.1,100);
-
-
-  //Transformation der Projektionsmatrix
-
 
   //Modellmatrix laden
   glmatrixmode(gl_modelview);
   glloadidentity();
 
   //Lichteinstellungen
-  Lichtposition[0]:=0.0;      // X-Achse  -1.0
-  Lichtposition[1]:=0.0;       // Y-Achse
-  Lichtposition[2]:=1.0;       // Z-Achse   Kameraposition
-  Lichtposition[3]:=1.0;       // 1.0=feste Position | 0.0=freie Position
+  Lichtposition[0]:=0.0;                   //X-Achse
+  Lichtposition[1]:=0.0;                   //Y-Achse
+  Lichtposition[2]:=1.0;                   //Z-Achse   Kameraposition
+  Lichtposition[3]:=1.0;                   //1.0=feste Position | 0.0=freie Position
 
-  glLightfv(GL_LIGHT0,        // Lichtquelle
-            GL_POSITION,      // Leutposition
-            Lichtposition);   // Lichtquellenkoordinaten
+  glLightfv(GL_LIGHT0,                     //Lichtquelle
+            GL_POSITION,                   //Leutposition
+            Lichtposition);                //Lichtquellenkoordinaten
 
   // Viewport links: Fogging
   glViewport(0,0,Breite DIV 2,Hoehe);
@@ -343,6 +304,7 @@ CONST
     glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
 
     //Nebel
+    //Nebelfarbe aus Komponenten entnehmen
     fogColor[0]:= TB_fogColor0.position/10;
     fogColor[1]:= TB_fogColor1.position/10;
     fogColor[2]:= TB_fogColor2.position/10;
@@ -352,8 +314,10 @@ CONST
     glClearColor(fogColor[0],fogColor[1],fogColor[2],fogColor[3]);
     glClear(GL_COLOR_BUFFER_BIT OR GL_DEPTH_BUFFER_BIT);
 
+    //Nebel einschalten
     glEnable(GL_FOG);
 
+    //Nebeleigenschaten aus Komponenten entnehmen
     fogDensity:= TB_Density.position/10;
     fogStart:= (TB_FogStart.position-10);
     fogEnd:= TB_FogEnd.position;
@@ -364,6 +328,7 @@ CONST
     2:fogMode:= GL_LINEAR;
     end;
 
+    //Nebel setzen und einschalten
         glFogi (GL_FOG_MODE, fogMode);
         glFogfv (GL_FOG_COLOR, fogColor);
         glFogf (GL_FOG_DENSITY, fogDensity);
@@ -372,22 +337,18 @@ CONST
         glFogf (GL_FOG_END, fogEnd);
     glClearColor(fogColor[0], fogColor[1], fogColor[2], fogColor[3]);
 
-    //Quardic erstellen
-    Quadric := gluNewQuadric();
-
-    //Eigenschaften der Quadrics einstellen
-    gluQuadricOrientation(Quadric, GLU_OUTSIDE);
-    gluQuadricDrawStyle(Quadric, GLU_FILL);
-    gluQuadricNormals(Quadric, GLU_FLAT);
-    gluQuadricTexture(Quadric, GL_TRUE);
-    glShadeModel(GL_FLAT);
-
-
     //Quadrics zeichnen
-    glColor3f(1,0,0);
+    glColor3f(1,0,0);                      //Rot
      for i:= 0 to 7 do
        begin
         glpushmatrix();
+        //Eigenschaften der Quadrics einstellen
+        gluQuadricOrientation(Quadrics[i], GLU_OUTSIDE);
+        gluQuadricDrawStyle(Quadrics[i], GLU_FILL);
+        gluQuadricNormals(Quadrics[i], GLU_FLAT);
+        gluQuadricTexture(Quadrics[i], GL_TRUE);
+        glShadeModel(GL_FLAT);
+
         gltranslatef(0.4+i*-0.3,0.1,0.5+i*-0.7);
         glrotatef(90, 1,0,0);
         glrotatef(30, 0,0,1);
@@ -396,13 +357,13 @@ CONST
        end;
 
   glPopMatrix();
-  glDisable(GL_FOG);
+  glDisable(GL_FOG);                       //Nebel deaktivieren
 
   // Viewport rechts: Partikelsystem
   glViewport(Breite DIV 2,0,Breite,Hoehe);
 
-  // Hintergrund schwarz
-  glbegin(GL_Quads);
+  // Hintergrundfarbe setzen
+  glbegin(GL_Quads);                       //großes Quadrat als Hintergrund
     glcolor3f(0,0,0);
     glvertex3f(-20,-20,-20);
     glvertex3f(20,-20,-20);
@@ -414,12 +375,11 @@ CONST
     glLoadIdentity();
     // --- Kameraposition festlegen
     gluLookAt(0,0,1,0,0,0,0,1,0);
-    // --- Transformation des Objekts
 
     // --- Polygonmodus einstellen
     glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 
-    // Licht
+    // Licht ausschalten
     glDisable(GL_COLOR_MATERIAL);
     glDisable(GL_LIGHT0);
     glDisable(GL_LIGHTING);
@@ -427,6 +387,7 @@ CONST
     //Textur laden
     Tex:= IMG_Load('textur/Textur6.png');
 
+    //Textur setzen und einschalten
     IF assigned(Tex) THEN
       BEGIN
         // eindeutige Kennung für die Textur generieren
@@ -452,68 +413,19 @@ CONST
   glEnable(GL_TEXTURE_2D);
 
   //Objekt erzeugen
+  //Wertentname aus den Komponenten
+  SEmitter:= TB_Emitter.position*10;       //Emitterstreuung
+  OriginX:= (-10+TB_EmitterX.position)/10;
+  OriginY:= (-4+TB_EmitterY.position-0.1*TB_EmitterY.position)/10;
+  SSpeed:= TB_Yspeed.position*5;           //y-Geschwindigkeit
 
-    case TB_Emitter.position of
-  0:SEmitter:= 0;
-  1:SEmitter:= 10;
-  2:SEmitter:= 20;
-  3:SEmitter:= 30;
-  4:SEmitter:= 40;
-  5:SEmitter:= 50;
-  6:SEmitter:= 60;
-  7:SEmitter:= 70;
-  8:SEmitter:= 90;
-  9:SEmitter:= 90;
-  10:SEmitter:= 100;
+  case RG_Size.itemindex of                //Partikelgröße
+  0:SSize:= 3;
+  1:SSize:= 5;
+  2:SSize:= 10;
   end;
 
-  case TB_x.position of
-  0:Originx:= -1;
-  1:Originx:= -0.9;
-  2:Originx:= -0.8;
-  3:Originx:= -0.7;
-  4:Originx:= -0.6;
-  5:Originx:= -0.5;
-  6:Originx:= -0.4;
-  7:Originx:= -0.3;
-  8:Originx:= -0.2;
-  9:Originx:= -0.1;
-  10:Originx:= 0;
-  end;
-  case TB_y.position of
-  0:Originy:= -0.4;
-  1:Originy:= -0.3;
-  2:Originy:= -0.2;
-  3:Originy:= -0.1;
-  4:Originy:= -0.05;
-  5:Originy:= 0;
-  6:Originy:= 0.05;
-  7:Originy:= 0.1;
-  8:Originy:= 0.2;
-  9:Originy:= 0.3;
-  10:Originy:= 0.4;
-  end;
-  case TB_Yspeed.position of
-  0:SSpeed:= 0;
-  1:SSpeed:= 5;
-  2:SSpeed:= 10;
-  3:SSpeed:= 15;
-  4:SSpeed:= 20;
-  5:SSpeed:= 25;
-  6:SSpeed:= 30;
-  7:SSpeed:= 35;
-  8:SSpeed:= 40;
-  9:SSpeed:= 45;
-  10:SSpeed:= 50;
-  end;
-
-  case RG_size.itemindex of
-  0:ssize:= 3;
-  1:ssize:= 5;
-  2:ssize:= 10;
-  end;
-
-  case RG_color.itemindex of
+  case RG_Color.itemindex of               //Partikelfarbe
   0:begin
     SColor[0]:= 0.5;
     SColor[1]:= 0.5;
@@ -533,39 +445,33 @@ CONST
     end;
   end;
 
-  case RG_transp.itemindex of
+  case RG_Transp.itemindex of              //Partikeltransparenz
   0:STransp:= 0.1;
   1:STransp:= 0.5;
   2:STransp:= 0.8;
   end;
 
-  case RG_shape.itemindex of
-  0:SShape:= 0;
-  1:SShape:= 1;
-  2:SShape:= 2;
-  end;
+  SShape:= RG_Shape.itemindex;             //Partikelform
 
-  case RG_lifespan.itemindex of
+  case RG_Lifespan.itemindex of            //Lebensdauer des Partikels
   0:SLifespan:= 30;
-  1:SLifespan:= 500;
+  1:SLifespan:= 50;
+  2:SLifespan:= 100;
   end;
 
-  for i:= 0 to length(ParticleArray) do
+  for i:= 0 to length(ParticleArray) do    //Schleife durch Partikelarray
     begin
-      ParticleArray[i].reset(OriginX,OriginY,SSpeed,SSize,SColor,STransp,SShape,SLifespan,SEmitter);
-      ParticleArray[i].show;
-      ParticleArray[i].move;
-      ParticleArray[i].aging;
+      ParticleArray[i].reset();            //Zurücksetzen der Partikel
+      ParticleArray[i].show;               //Anzeigen der Partikel
+      ParticleArray[i].move;               //Bewegen der Partikel
+      ParticleArray[i].aging;              //Altern der Partikel
     end;
   glPopMatrix();
 
-  //Quadrics löschen
-  gluDeleteQuadric(Quadric);
-
-  // Textur löschen
-  glDisable(GL_TEXTURE_2D);      //Textur deaktivieren
-  glDeleteTextures(1,@TexID);    // Löschen der Textur
-
+  // Textur deaktivieren
+  glDisable(GL_TEXTURE_2D);
+  //Textur löschen
+  glDeleteTextures(1,@TexID);
 
   // Zeichnen
   glFlush();
@@ -575,12 +481,12 @@ CONST
 
 end;
 
-procedure TForm_Nebel.OpenGLControl1Resize(Sender: TObject);
+procedure TF_Nebel.OpenGLControl1Resize(Sender: TObject);
 begin
   IF OpenGLControl1.Height <= 0 THEN Exit;
 end;
 
-procedure TForm_Nebel.P_VClick(Sender: TObject);
+procedure TF_Nebel.P_VerticalClick(Sender: TObject);
 begin
 
 end;
